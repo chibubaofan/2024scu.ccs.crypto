@@ -103,7 +103,7 @@ print("验证数字签名：")
 print(甲.Verify(hash_m,sign))
 
 #功能d以命令行形式指定明文文件和恢复明文文件，如果两文件一致，则输出success，否则输出failure.
-print("\n现在验证解密出来的内容是否与原内容相等")
+print("\n乙：现在验证解密出来的内容是否与原内容相等")
 with open("decrypt_text.txt",'r')as f:
     decrypt_text=f.read()
 with open(plaintext,'r')as f:

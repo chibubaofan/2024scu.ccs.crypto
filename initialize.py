@@ -25,9 +25,25 @@ with open("plaintext.txt", "w") as f:
         f.write(random_letters)
         file_size -= chunk_size
 print("随机明文序列文件plaintext.txt生成完成")
+# 现在随机生成公钥和私钥
 
+print("随机生成公钥和私钥")
+secret_int = None
+
+e = SM2Util.GenKeyPair(secret_int)
+print(f"甲：我的私钥：{e[0]}，\n我的公钥{e[1][2:]}")
+
+with open("pk1.txt",'w')as f:
+    f.write(e[1][2:])
+with open("sk1.txt",'w')as f:
+    f.write(e[0])
+e = SM2Util.GenKeyPair(secret_int)
+print(f"乙：我的私钥：{e[0]}，\n我的公钥:{e[1][2:]}")
+with open("pk2.txt",'w')as f:
+    f.write(e[1][2:])
+with open("sk2.txt",'w')as f:
+    f.write(e[0])
 # 然后随机生成一个对称密钥128位k，并写入到key.txt中
-
 # 生成128位（16字节）随机密钥
 key = secrets.token_bytes(16)
 
@@ -86,28 +102,16 @@ def sm3_hash(msg):
 
 with open("key.txt",'r') as f:
     key=f.read()
-
-
 with open("iv.txt",'r') as f:
     iv=f.read()
-
-
 with open("pk1.txt",'r') as f:
     pk1=f.read()
-
-
 with open("pk2.txt",'r') as f:
     pk2=f.read()
-
-
 with open("sk1.txt",'r') as f:
     sk1=f.read()
-
-
 with open("sk2.txt",'r') as f:
     sk2=f.read()
-
-
 with open("plaintext.txt",'r') as f:
     fiveMb=f.read()
 
@@ -115,37 +119,41 @@ with open("plaintext.txt",'r') as f:
 乙=SM2Util(pk2,sk2)
 testdata=fiveMb
 # 对称加密
-
+print("\n甲：利用sm4加密明文")
 cypertext=SM4encrypt(key,iv,testdata)
 with open("crypto_text.txt",'w')as f:
     f.write(cypertext)
 
 # 哈希值
-
+print("\n甲：利用sm3获取明文哈希值")
 hash_text=sm3_hash(utilfunctionforsm4.str2byte(testdata))
-
+print(hash_text)
 #甲的签名
+print("\n甲：我现在利用自己的私钥签名得到的哈希值")
 sign1=甲.Sign(hash_text)
 with open("sign.txt",'w')as f:
     f.write(sign1)
-
+print(sign1)
 # 甲利用乙的公钥加密key
+print("\n甲：我现在利用乙的公钥加密对称密钥")
 crypt_key=乙.Encrypt(key)
 with open('crypt_key.txt',"w")as f:
     f.write(crypt_key)
 
 #乙恢复对称加密密钥
+print("\n乙：我现在利用自己的私钥恢复对称加密密钥")
 reverse_key=乙.Decrypt(crypt_key)
-
+print(reverse_key)
 assert reverse_key==key
 
 #乙利用对称加密密钥恢复明文
+print("\n乙：我现在利用对称密钥解密")
 decrypt_text=SM4decrypt(cypertext,reverse_key,iv)
-
+print("恢复明文成功")
 
 # 乙对甲的签名进行验证
+print("\n乙：我现在对甲的签名进行验证，首先我将算出明文的哈希值，之后进行签名验证")
 hash_text2=sm3_hash(utilfunctionforsm4.str2byte(decrypt_text))
 assert hash_text2==hash_text
 verify=甲.Verify(hash_text2,sign1)
-print(verify)
-
+print("签名验证结果："+str(verify))
